@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
-import { StatsCard } from '@/components/dashboard/StatsCard'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { 
@@ -19,6 +18,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { PageLoading } from '@/components/ui/Loading'
+import { DynamicStatsCard } from '@/components/dynamic/DynamicImports'
+import { LoadingSpinner } from '@/components/ui/LoadingStates'
 
 interface DashboardStats {
   totalSessions: number
@@ -151,37 +152,45 @@ export default function DashboardPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            title="جلسات تيليجرام"
-            value={statsLoading ? '...' : stats?.activeSessions || 0}
-            subtitle={`من أصل ${stats?.totalSessions || 0} جلسة`}
-            icon={Phone}
-            color="blue"
-          />
+          <Suspense fallback={<div className="h-24 animate-pulse bg-muted rounded-lg" />}>
+            <DynamicStatsCard
+              title="جلسات تيليجرام"
+              value={statsLoading ? <LoadingSpinner size="sm" /> : stats?.activeSessions || 0}
+              subtitle={`من أصل ${stats?.totalSessions || 0} جلسة`}
+              icon={Phone}
+              color="blue"
+            />
+          </Suspense>
           
-          <StatsCard
-            title="المجموعات النشطة"
-            value={statsLoading ? '...' : stats?.totalGroups || 0}
-            subtitle="مجموعة مستوردة"
-            icon={MessageSquare}
-            color="green"
-          />
+          <Suspense fallback={<div className="h-24 animate-pulse bg-muted rounded-lg" />}>
+            <DynamicStatsCard
+              title="المجموعات النشطة"
+              value={statsLoading ? <LoadingSpinner size="sm" /> : stats?.totalGroups || 0}
+              subtitle="مجموعة مستوردة"
+              icon={MessageSquare}
+              color="green"
+            />
+          </Suspense>
           
-          <StatsCard
-            title="الحملات الجارية"
-            value={statsLoading ? '...' : stats?.runningCampaigns || 0}
-            subtitle={`من أصل ${stats?.totalCampaigns || 0} حملة`}
-            icon={BarChart3}
-            color="purple"
-          />
+          <Suspense fallback={<div className="h-24 animate-pulse bg-muted rounded-lg" />}>
+            <DynamicStatsCard
+              title="الحملات الجارية"
+              value={statsLoading ? <LoadingSpinner size="sm" /> : stats?.runningCampaigns || 0}
+              subtitle={`من أصل ${stats?.totalCampaigns || 0} حملة`}
+              icon={BarChart3}
+              color="purple"
+            />
+          </Suspense>
           
-          <StatsCard
-            title="إجمالي الأعضاء"
-            value={statsLoading ? '...' : stats?.totalMembers || 0}
-            subtitle="عضو مستخرج"
-            icon={Users}
-            color="orange"
-          />
+          <Suspense fallback={<div className="h-24 animate-pulse bg-muted rounded-lg" />}>
+            <DynamicStatsCard
+              title="إجمالي الأعضاء"
+              value={statsLoading ? <LoadingSpinner size="sm" /> : stats?.totalMembers || 0}
+              subtitle="عضو مستخرج"
+              icon={Users}
+              color="orange"
+            />
+          </Suspense>
         </div>
 
         {/* Main Content Grid */}

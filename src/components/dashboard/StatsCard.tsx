@@ -1,6 +1,7 @@
 import { LucideIcon } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { memo, useMemo } from 'react'
 
 interface StatsCardProps {
   title: string
@@ -35,17 +36,30 @@ const colorClasses = {
     icon: 'text-red-600 bg-red-100',
     trend: 'text-red-600'
   }
-}
+} as const
 
-export function StatsCard({ 
+const StatsCard = memo(({ 
   title, 
   value, 
   subtitle, 
   icon: Icon, 
   trend,
   color = 'blue' 
-}: StatsCardProps) {
-  const colors = colorClasses[color]
+}: StatsCardProps) => {
+  // تحسين الأداء بـ useMemo للألوان الثابتة
+  const colors = useMemo(() => colorClasses[color], [color])
+  
+  // حساب فئات الاتجاه باستخدام useMemo
+  const trendClass = useMemo(() => {
+    if (!trend) return null
+    return trend.isPositive ? 'text-green-600' : 'text-red-600'
+  }, [trend])
+
+  // حساب قيمة الاتجاه
+  const trendValue = useMemo(() => {
+    if (!trend) return null
+    return `${trend.isPositive ? '+' : ''}${trend.value}%`
+  }, [trend])
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -59,11 +73,8 @@ export function StatsCard({
             )}
             {trend && (
               <div className="flex items-center mt-2">
-                <span className={cn(
-                  'text-sm font-medium',
-                  trend.isPositive ? 'text-green-600' : 'text-red-600'
-                )}>
-                  {trend.isPositive ? '+' : ''}{trend.value}%
+                <span className={cn('text-sm font-medium', trendClass)}>
+                  {trendValue}
                 </span>
                 <span className="text-sm text-slate-600 mr-2">من الشهر الماضي</span>
               </div>
@@ -79,4 +90,6 @@ export function StatsCard({
       </CardContent>
     </Card>
   )
-}
+})
+
+StatsCard.displayName = 'StatsCard'

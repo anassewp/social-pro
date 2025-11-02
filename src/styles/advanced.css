@@ -1,0 +1,843 @@
+/* ==========================================================
+   Advanced Design System CSS
+   تصميم متقدم مع animations و micro-interactions
+========================================================== */
+
+/* ==========================================================
+   CSS Custom Properties - متغيرات CSS المتقدمة
+========================================================== */
+:root {
+  /* ===== الألوان المتقدمة ===== */
+  --gradient-primary: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(217, 91%, 70%) 100%);
+  --gradient-secondary: linear-gradient(135deg, hsl(240, 4.8%, 95.9%) 0%, hsl(240, 4.8%, 90%) 100%);
+  --gradient-success: linear-gradient(135deg, hsl(142, 76%, 36%) 0%, hsl(142, 76%, 46%) 100%);
+  --gradient-warning: linear-gradient(135deg, hsl(38, 92%, 50%) 0%, hsl(38, 92%, 60%) 100%);
+  --gradient-error: linear-gradient(135deg, hsl(0, 84%, 60%) 0%, hsl(0, 84%, 70%) 100%);
+  
+  /* Dark mode gradients */
+  .dark {
+    --gradient-primary: linear-gradient(135deg, hsl(217, 91%, 65%) 0%, hsl(217, 91%, 75%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(217.2, 32.6%, 17.5%) 0%, hsl(217.2, 32.6%, 22%) 100%);
+  }
+
+  /* ===== الانتقالات المتقدمة ===== */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-default: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --transition-elastic: 700ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* ===== الحركات والتأثيرات ===== */
+  --hover-lift: translateY(-2px);
+  --hover-scale: scale(1.02);
+  --hover-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+  --active-scale: scale(0.98);
+
+  /* ===== المسافات المحسنة ===== */
+  --spacing-unit: 0.25rem;
+  --spacing-xs: calc(var(--spacing-unit) * 1);  /* 4px */
+  --spacing-sm: calc(var(--spacing-unit) * 2);  /* 8px */
+  --spacing-md: calc(var(--spacing-unit) * 3);  /* 12px */
+  --spacing-lg: calc(var(--spacing-unit) * 4);  /* 16px */
+  --spacing-xl: calc(var(--spacing-unit) * 6);  /* 24px */
+  --spacing-2xl: calc(var(--spacing-unit) * 8); /* 32px */
+  --spacing-3xl: calc(var(--spacing-unit) * 12); /* 48px */
+  --spacing-4xl: calc(var(--spacing-unit) * 16); /* 64px */
+
+  /* ===== الظلال المتقدمة ===== */
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --shadow-colored: 0 8px 24px rgba(59, 130, 246, 0.15);
+  
+  .dark {
+    --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-colored: 0 8px 24px rgba(59, 130, 246, 0.25);
+  }
+
+  /* ===== الألوان المتقدمة للحالات ===== */
+  --success-light: hsl(142, 76%, 95%);
+  --warning-light: hsl(38, 92%, 95%);
+  --error-light: hsl(0, 84%, 95%);
+  --info-light: hsl(199, 89%, 95%);
+
+  /* ===== تأثيرات الخلفية ===== */
+  --backdrop-blur: blur(8px);
+  --backdrop-blur-strong: blur(16px);
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  
+  .dark {
+    --glass-bg: rgba(0, 0, 0, 0.2);
+    --glass-border: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* ==========================================================
+   Base Enhanced Styles - الأنماط الأساسية المحسنة
+========================================================== */
+
+/* Selection محسن */
+::selection {
+  background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(217, 91%, 70%) 100%);
+  color: white;
+  text-shadow: none;
+}
+
+.dark ::selection {
+  background: linear-gradient(135deg, hsl(217, 91%, 65%) 0%, hsl(217, 91%, 75%) 100%);
+}
+
+/* Focus visible محسن */
+:focus-visible {
+  outline: 3px solid hsl(217, 91%, 60%);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
+/* Scrollbar محسن */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 8px;
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(217, 91%, 70%) 100%);
+  border-radius: 8px;
+  border: 2px solid hsl(var(--muted));
+  transition: all var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, hsl(217, 91%, 55%) 0%, hsl(217, 91%, 65%) 100%);
+  transform: scale(1.1);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(217, 91%, 60%) hsl(var(--muted));
+}
+
+/* ==========================================================
+   Advanced Button Styles - أزرار متقدمة
+========================================================== */
+
+.btn-gradient {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  transition: all var(--transition-default);
+  box-shadow: var(--shadow-medium);
+}
+
+.btn-gradient:hover {
+  transform: var(--hover-lift);
+  box-shadow: var(--shadow-strong), var(--hover-glow);
+}
+
+.btn-gradient:active {
+  transform: var(--active-scale);
+}
+
+.btn-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--glass-border);
+  transition: all var(--transition-default);
+}
+
+.btn-glass:hover {
+  background: var(--glass-bg) / 0.8;
+  border-color: hsl(var(--primary) / 0.3);
+  transform: var(--hover-lift);
+}
+
+/* ==========================================================
+   Card Enhancements - تحسينات البطاقات
+========================================================== */
+
+.card-enhanced {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  transition: all var(--transition-default);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gradient-primary);
+  transform: scaleX(0);
+  transition: transform var(--transition-default);
+}
+
+.card-enhanced:hover {
+  transform: var(--hover-lift);
+  box-shadow: var(--shadow-strong);
+  border-color: hsl(var(--primary) / 0.2);
+}
+
+.card-enhanced:hover::before {
+  transform: scaleX(1);
+}
+
+.card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-medium);
+}
+
+.card-interactive {
+  cursor: pointer;
+  transition: all var(--transition-default);
+}
+
+.card-interactive:hover {
+  transform: var(--hover-scale);
+  box-shadow: var(--shadow-strong);
+}
+
+/* ==========================================================
+   Animation Keyframes -keyframes للحركات
+========================================================== */
+
+/* Fade animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Slide animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Scale animations */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+/* Bounce animations */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Shake animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+/* Pulse animation */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Loading spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Glow effect */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px hsl(var(--primary) / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.6), 0 0 30px hsl(var(--primary) / 0.4);
+  }
+}
+
+/* ==========================================================
+   Animation Utility Classes - فئات مساعدة للحركة
+========================================================== */
+
+/* Animation classes */
+.animate-fade-in {
+  animation: fadeIn var(--transition-default) ease-out forwards;
+}
+
+.animate-fade-out {
+  animation: fadeOut var(--transition-default) ease-in forwards;
+}
+
+.animate-slide-in-up {
+  animation: slideInUp var(--transition-default) ease-out forwards;
+}
+
+.animate-slide-in-down {
+  animation: slideInDown var(--transition-default) ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft var(--transition-default) ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight var(--transition-default) ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn var(--transition-bounce) ease-out forwards;
+}
+
+.animate-bounce-in {
+  animation: bounceIn var(--transition-bounce) ease-out forwards;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--primary) / 0.1),
+    transparent
+  );
+  background-size: 200px 100%;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Animation delays */
+.animate-delay-75 { animation-delay: 75ms; }
+.animate-delay-100 { animation-delay: 100ms; }
+.animate-delay-150 { animation-delay: 150ms; }
+.animate-delay-200 { animation-delay: 200ms; }
+.animate-delay-300 { animation-delay: 300ms; }
+.animate-delay-500 { animation-delay: 500ms; }
+
+/* Animation durations */
+.animate-duration-150 { animation-duration: 150ms; }
+.animate-duration-300 { animation-duration: 300ms; }
+.animate-duration-500 { animation-duration: 500ms; }
+.animate-duration-700 { animation-duration: 700ms; }
+.animate-duration-1000 { animation-duration: 1000ms; }
+
+/* ==========================================================
+   Micro-interactions - التفاعلات الدقيقة
+========================================================== */
+
+/* Hover effects */
+.hover-lift {
+  transition: transform var(--transition-default);
+}
+
+.hover-lift:hover {
+  transform: var(--hover-lift);
+}
+
+.hover-scale {
+  transition: transform var(--transition-default);
+}
+
+.hover-scale:hover {
+  transform: var(--hover-scale);
+}
+
+.hover-glow {
+  transition: box-shadow var(--transition-default);
+}
+
+.hover-glow:hover {
+  box-shadow: var(--hover-glow);
+}
+
+.hover-border {
+  transition: border-color var(--transition-default);
+}
+
+.hover-border:hover {
+  border-color: hsl(var(--primary));
+}
+
+/* Active effects */
+.active-scale {
+  transition: transform var(--transition-fast);
+}
+
+.active-scale:active {
+  transform: var(--active-scale);
+}
+
+/* Focus effects */
+.focus-ring {
+  transition: box-shadow var(--transition-fast);
+}
+
+.focus-ring:focus {
+  box-shadow: var(--shadow-colored);
+}
+
+/* ==========================================================
+   Glass Morphism Effects - تأثيرات الزجاج
+========================================================== */
+
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-strong {
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur-strong);
+  border: 1px solid var(--glass-border);
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-medium);
+}
+
+/* ==========================================================
+   Advanced Grid System - نظام الشبكة المتقدم
+========================================================== */
+
+/* Responsive grid utilities */
+.grid-responsive {
+  display: grid;
+  gap: var(--spacing-lg);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid-responsive {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Grid auto-fit */
+.grid-auto-fit {
+  display: grid;
+  gap: var(--spacing-lg);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+/* Grid auto-fill */
+.grid-auto-fill {
+  display: grid;
+  gap: var(--spacing-lg);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+/* ==========================================================
+   Text Effects - تأثيرات النص
+========================================================== */
+
+/* Gradient text */
+.text-gradient {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Text shadow */
+.text-shadow {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.text-shadow-strong {
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Text glow */
+.text-glow {
+  text-shadow: 0 0 10px hsl(var(--primary) / 0.5);
+}
+
+/* ==========================================================
+   Layout Utilities - أدوات التخطيط
+========================================================== */
+
+/* Safe areas */
+.safe-top { padding-top: var(--safe-area-inset-top); }
+.safe-right { padding-right: var(--safe-area-inset-right); }
+.safe-bottom { padding-bottom: var(--safe-area-inset-bottom); }
+.safe-left { padding-left: var(--safe-area-inset-left); }
+
+/* Aspect ratios */
+.aspect-video { aspect-ratio: 16 / 9; }
+.aspect-square { aspect-ratio: 1 / 1; }
+.aspect-photo { aspect-ratio: 4 / 3; }
+
+/* Container queries */
+@container (min-width: 768px) {
+  .container-sm\:grid-cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ==========================================================
+   Advanced Loading States - حالات التحميل المتقدمة
+========================================================== */
+
+.loading-skeleton {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted) / 0.5) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.loading-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ==========================================================
+   Responsive Typography - تايبوغرافي متجاوب
+========================================================== */
+
+/* Fluid typography */
+.text-fluid-xs {
+  font-size: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+  line-height: 1.5;
+}
+
+.text-fluid-sm {
+  font-size: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
+  line-height: 1.6;
+}
+
+.text-fluid-base {
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
+  line-height: 1.7;
+}
+
+.text-fluid-lg {
+  font-size: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
+  line-height: 1.7;
+}
+
+.text-fluid-xl {
+  font-size: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
+  line-height: 1.6;
+}
+
+.text-fluid-2xl {
+  font-size: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  line-height: 1.4;
+}
+
+/* ==========================================================
+   Accessibility Enhancements - تحسينات إمكانية الوصول
+========================================================== */
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .card-enhanced {
+    border-width: 2px;
+    border-color: hsl(var(--foreground));
+  }
+  
+  .btn-gradient {
+    border: 2px solid hsl(var(--foreground));
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-spin {
+    animation: none;
+  }
+  
+  .animate-float {
+    animation: none;
+  }
+  
+  .animate-pulse {
+    animation: none;
+  }
+}
+
+/* ==========================================================
+   Print Styles - أنماط الطباعة
+========================================================== */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .card-enhanced {
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  .text-gradient {
+    color: #000 !important;
+    -webkit-text-fill-color: initial !important;
+  }
+}
+
+/* ==========================================================
+   Dark Mode Specific Enhancements
+========================================================== */
+
+.dark {
+  /* Glass effects for dark mode */
+  --glass-bg: rgba(0, 0, 0, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  
+  /* Enhanced shadows */
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.8);
+}
+
+/* ==========================================================
+   Performance Optimizations
+========================================================== */
+
+/* GPU acceleration for animations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-auto {
+  will-change: auto;
+}
+
+/* Optimize layout changes */
+.gpu-layer {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ==========================================================
+   Container Queries Support
+========================================================== */
+
+@container (min-width: 320px) {
+  .container-xs\:text-sm { font-size: 0.875rem; }
+  .container-xs\:grid-cols-1 { grid-template-columns: 1fr; }
+}
+
+@container (min-width: 640px) {
+  .container-sm\:text-base { font-size: 1rem; }
+  .container-sm\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@container (min-width: 768px) {
+  .container-md\:text-lg { font-size: 1.125rem; }
+  .container-md\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+@container (min-width: 1024px) {
+  .container-lg\:text-xl { font-size: 1.25rem; }
+  .container-lg\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ==========================================================
+   Error States - حالات الأخطاء
+========================================================== */
+
+.error-shake {
+  animation: shake 0.5s ease-in-out;
+  border-color: hsl(var(--error)) !important;
+  box-shadow: 0 0 0 3px hsl(var(--error) / 0.1) !important;
+}
+
+.error-glow {
+  box-shadow: 0 0 20px hsl(var(--error) / 0.3);
+}
+
+/* Success states */
+.success-glow {
+  box-shadow: 0 0 20px hsl(var(--success) / 0.3);
+}
+
+.success-pulse {
+  animation: pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 20px hsl(var(--success) / 0.2);
+}

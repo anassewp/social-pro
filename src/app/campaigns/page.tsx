@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Suspense, lazy } from 'react'
 import { DashboardLayout } from '@/components/layout/DashboardLayout'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -29,13 +29,17 @@ import {
 import { useAuth } from '@/lib/hooks/useAuth'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { CampaignDetailsModal } from '@/components/campaigns/CampaignDetailsModal'
 import { PaginationControls } from '@/components/campaigns/PaginationControls'
 import { useCampaigns, useDeleteCampaign, usePauseCampaign, type Campaign } from '@/lib/hooks/useCampaigns'
 import { useRealtimeSubscription } from '@/lib/hooks/useRealtime'
 import { PageLoading } from '@/components/ui/Loading'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { DynamicCampaignDetailsModal, LoadingWrapper } from '@/components/dynamic/DynamicImports'
+import { LoadingSpinner } from '@/components/ui/LoadingStates'
+
+// Lazy load the CampaignDetailsModal
+const CampaignDetailsModal = lazy(() => import('@/components/campaigns/CampaignDetailsModal').then(mod => ({ default: mod.CampaignDetailsModal })))
 
 export default function CampaignsPage() {
   const router = useRouter()
@@ -641,12 +645,30 @@ export default function CampaignsPage() {
 
         {/* Modal تفاصيل الحملة */}
         {selectedCampaign && (
-          <CampaignDetailsModal
-            open={true}
-            onOpenChange={(open) => !open && setSelectedCampaign(null)}
-            campaign={selectedCampaign as any}
-            onUpdate={() => refetch()}
-          />
+          <LoadingWrapper
+            fallback={
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-background p-6 rounded-lg max-w-2xl w-full mx-4">
+                  <LoadingSpinner size="lg" text="جاري تحميل تفاصيل الحملة..." />
+                </div>
+              </div>
+            }
+          >
+            <Suspense fallback={
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-background p-6 rounded-lg max-w-2xl w-full mx-4">
+                  <LoadingSpinner size="lg" text="جاري تحميل تفاصيل الحملة..." />
+                </div>
+              </div>
+            }>
+              <DynamicCampaignDetailsModal
+                open={true}
+                onOpenChange={(open) => !open && setSelectedCampaign(null)}
+                campaign={selectedCampaign as any}
+                onUpdate={() => refetch()}
+              />
+            </Suspense>
+          </LoadingWrapper>
         )}
       </div>
     </DashboardLayout>

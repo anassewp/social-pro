@@ -2,16 +2,27 @@
 
 import { Bell, Search, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { useAuth } from '@/lib/hooks/useAuth'
-import { ThemeToggleSimple } from '@/components/ui/theme-toggle'
+import { SimpleThemeToggle, DropdownThemeToggle } from '@/components/theme'
+import { memo, useCallback } from 'react'
+import { DebouncedInput } from '@/components/performance/DebouncedInput'
 
 interface HeaderProps {
   onMenuClick?: () => void
+  onSearch?: (query: string) => void
 }
 
-export function Header({ onMenuClick }: HeaderProps) {
+const Header = memo(({ onMenuClick, onSearch }: HeaderProps) => {
   const { user } = useAuth()
+
+  // تحسين الأداء باستخدام useCallback
+  const handleMenuClick = useCallback(() => {
+    onMenuClick?.()
+  }, [onMenuClick])
+
+  const handleSearchChange = useCallback((query: string) => {
+    onSearch?.(query)
+  }, [onSearch])
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6 shadow-sm transition-colors">
@@ -20,7 +31,7 @@ export function Header({ onMenuClick }: HeaderProps) {
         variant="ghost"
         size="icon"
         className="md:hidden text-foreground hover:bg-accent"
-        onClick={onMenuClick}
+        onClick={handleMenuClick}
       >
         <Menu className="h-5 w-5" />
       </Button>
@@ -29,17 +40,19 @@ export function Header({ onMenuClick }: HeaderProps) {
       <div className="flex-1 max-w-md mx-4">
         <div className="relative">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
+          <DebouncedInput
             placeholder="البحث..."
             className="pr-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
+            onChange={handleSearchChange}
+            delay={300}
           />
         </div>
       </div>
 
       {/* Right side */}
       <div className="flex items-center space-x-4 rtl:space-x-reverse">
-        {/* Theme Toggle */}
-        <ThemeToggleSimple />
+        {/* Enhanced Theme Toggle */}
+        <SimpleThemeToggle />
 
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative text-foreground hover:bg-accent">
@@ -68,4 +81,8 @@ export function Header({ onMenuClick }: HeaderProps) {
       </div>
     </header>
   )
-}
+})
+
+Header.displayName = 'Header'
+
+export { Header }

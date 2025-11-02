@@ -1,8 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { ThemeProvider } from "@/lib/hooks/useTheme";
+import { EnhancedThemeWrapper, ThemeDebugInfo } from "@/components/theme";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { QueryProvider } from "@/lib/providers/QueryProvider";
+import { cairoFont, interFont, fontCSS } from "@/components/media/FontOptimizer";
+import { MediaProvider } from "@/components/media/MediaProvider";
+import { ResourceHints } from "@/lib/hooks/usePreload";
 
 export const metadata: Metadata = {
   title: "SocialPro - منصة التسويق الاحترافية عبر تيليجرام",
@@ -11,12 +14,26 @@ export const metadata: Metadata = {
   authors: [{ name: "SocialPro Team" }],
   other: {
     'darkreader-lock': '',
+    'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-status-bar-style': 'black-translucent',
+    'apple-mobile-web-app-title': 'SocialPro',
+    'format-detection': 'telephone=no',
+    'msapplication-tap-highlight': 'no',
+    'theme-color': '#2563eb',
   },
 };
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({
@@ -26,7 +43,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning data-scroll-behavior="smooth">
-      <body className="font-cairo antialiased" suppressHydrationWarning>
+      <body 
+        className={`${cairoFont.className} ${interFont.className} antialiased`}
+        suppressHydrationWarning
+        style={{
+          fontFamily: cairoFont.style.fontFamily,
+        }}
+      >
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -62,11 +85,21 @@ export default function RootLayout({
         />
         <ErrorBoundary>
           <QueryProvider>
-            <ThemeProvider>
-              {children}
-            </ThemeProvider>
+            <EnhancedThemeWrapper
+              enableAnimations={true}
+              enableAccessibility={true}
+              enablePerformanceOptimizations={true}
+            >
+              <MediaProvider>
+                <ResourceHints />
+                {children}
+              </MediaProvider>
+            </EnhancedThemeWrapper>
           </QueryProvider>
         </ErrorBoundary>
+        
+        {/* Theme Debug Info - Development only */}
+        {process.env.NODE_ENV === 'development' && <ThemeDebugInfo />}
       </body>
     </html>
   );

@@ -1,0 +1,357 @@
+# Prometheus Alert Rules for Social Pro
+# Comprehensive monitoring and alerting configuration
+
+groups:
+  # Application Alerts
+  - name: social-pro-app
+    rules:
+      - alert: ApplicationDown
+        expr: up{job="social-pro-app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: social-pro
+          component: application
+        annotations:
+          summary: "Social Pro application is down"
+          description: "The Social Pro application has been down for more than 1 minute."
+          runbook_url: "https://wiki.social-pro.app/runbooks/application-down"
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="social-pro-app"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: social-pro
+          component: application
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/high-response-time"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{job="social-pro-app",status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: social-pro
+          component: application
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} requests/second for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/high-error-rate"
+
+      - alert: DatabaseConnectionFailure
+        expr: up{job="database"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: social-pro
+          component: database
+        annotations:
+          summary: "Database connection failure"
+          description: "Cannot connect to database for more than 1 minute."
+          runbook_url: "https://wiki.social-pro.app/runbooks/database-down"
+
+  # System Resource Alerts
+  - name: system-resources
+    rules:
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: social-pro
+          component: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/high-cpu-usage"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: social-pro
+          component: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/high-memory-usage"
+
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_avail_bytes) / node_filesystem_size_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+          service: social-pro
+          component: system
+        annotations:
+          summary: "High disk usage detected"
+          description: "Disk usage is above 90% for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/high-disk-usage"
+
+      - alert: HighLoadAverage
+        expr: node_load1 > (count(node_cpu_seconds_total{mode="idle"}) * 0.8)
+        for: 5m
+        labels:
+          severity: warning
+          service: social-pro
+          component: system
+        annotations:
+          summary: "High load average detected"
+          description: "Load average is {{ $value }} for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/high-load-average"
+
+  # Container Alerts
+  - name: containers
+    rules:
+      - alert: ContainerDown
+        expr: container_last_seen > (time() - 60)
+        for: 1m
+        labels:
+          severity: critical
+          service: social-pro
+          component: container
+        annotations:
+          summary: "Container is down"
+          description: "Container {{ $labels.name }} has been down for more than 1 minute."
+          runbook_url: "https://wiki.social-pro.app/runbooks/container-down"
+
+      - alert: ContainerHighCPU
+        expr: rate(container_cpu_usage_seconds_total{name!=""}[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: social-pro
+          component: container
+        annotations:
+          summary: "Container high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is above 80% for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/container-high-cpu"
+
+      - alert: ContainerHighMemory
+        expr: container_memory_usage_bytes{name!=""} / container_spec_memory_limit_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: social-pro
+          component: container
+        annotations:
+          summary: "Container high memory usage"
+          description: "Container {{ $labels.name }} memory usage is above 90% for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/container-high-memory"
+
+  # Redis Alerts
+  - name: redis
+    rules:
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: social-pro
+          component: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis server has been down for more than 1 minute."
+          runbook_url: "https://wiki.social-pro.app/runbooks/redis-down"
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: social-pro
+          component: redis
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is above 90% for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/redis-high-memory"
+
+      - alert: RedisHighConnections
+        expr: redis_connected_clients > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: social-pro
+          component: redis
+        annotations:
+          summary: "Redis high connections"
+          description: "Redis has {{ $value }} active connections, above threshold."
+          runbook_url: "https://wiki.social-pro.app/runbooks/redis-high-connections"
+
+  # Security Alerts
+  - name: security
+    rules:
+      - alert: SSLCertificateExpiring
+        expr: (probe_ssl_earliest_cert_expiry - time()) / 86400 < 30
+        for: 1h
+        labels:
+          severity: warning
+          service: social-pro
+          component: security
+        annotations:
+          summary: "SSL certificate expiring soon"
+          description: "SSL certificate expires in {{ $value }} days."
+          runbook_url: "https://wiki.social-pro.app/runbooks/ssl-cert-expiring"
+
+      - alert: MultipleFailedLogins
+        expr: increase(failed_login_attempts_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: social-pro
+          component: security
+        annotations:
+          summary: "Multiple failed login attempts"
+          description: "{{ $value }} failed login attempts in the last 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/multiple-failed-logins"
+
+  # Business Metrics Alerts
+  - name: business-metrics
+    rules:
+      - alert: LowUserActivity
+        expr: rate(user_actions_total[1h]) < 10
+        for: 30m
+        labels:
+          severity: warning
+          service: social-pro
+          component: business
+        annotations:
+          summary: "Low user activity detected"
+          description: "User activity rate is {{ $value }} actions/hour, below threshold."
+          runbook_url: "https://wiki.social-pro.app/runbooks/low-user-activity"
+
+      - alert: HighAPIUsage
+        expr: rate(api_requests_total[5m]) > 1000
+        for: 10m
+        labels:
+          severity: warning
+          service: social-pro
+          component: business
+        annotations:
+          summary: "High API usage detected"
+          description: "API usage rate is {{ $value }} requests/second."
+          runbook_url: "https://wiki.social-pro.app/runbooks/high-api-usage"
+
+  # Infrastructure Alerts
+  - name: infrastructure
+    rules:
+      - alert: NginxDown
+        expr: up{job="nginx"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: social-pro
+          component: nginx
+        annotations:
+          summary: "Nginx is down"
+          description: "Nginx reverse proxy has been down for more than 1 minute."
+          runbook_url: "https://wiki.social-pro.app/runbooks/nginx-down"
+
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: monitoring
+          component: prometheus
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus monitoring system has been down for more than 2 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/prometheus-down"
+
+      - alert: GrafanaDown
+        expr: up{job="grafana"} == 0
+        for: 5m
+        labels:
+          severity: warning
+          service: monitoring
+          component: grafana
+        annotations:
+          summary: "Grafana is down"
+          description: "Grafana dashboard has been down for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/grafana-down"
+
+  # Deployment Alerts
+  - name: deployment
+    rules:
+      - alert: DeploymentFailed
+        expr: deployment_status == 1
+        for: 0m
+        labels:
+          severity: critical
+          service: social-pro
+          component: deployment
+        annotations:
+          summary: "Deployment failed"
+          description: "Latest deployment has failed for environment {{ $labels.environment }}."
+          runbook_url: "https://wiki.social-pro.app/runbooks/deployment-failed"
+
+      - alert: RollbackTriggered
+        expr: rollback_status == 1
+        for: 0m
+        labels:
+          severity: warning
+          service: social-pro
+          component: deployment
+        annotations:
+          summary: "Automatic rollback triggered"
+          description: "Automatic rollback was triggered for environment {{ $labels.environment }}."
+          runbook_url: "https://wiki.social-pro.app/runbooks/rollback-triggered"
+
+  # Backup Alerts
+  - name: backup
+    rules:
+      - alert: BackupFailed
+        expr: backup_status == 1
+        for: 0m
+        labels:
+          severity: critical
+          service: social-pro
+          component: backup
+        annotations:
+          summary: "Backup failed"
+          description: "Latest backup has failed for environment {{ $labels.environment }}."
+          runbook_url: "https://wiki.social-pro.app/runbooks/backup-failed"
+
+      - alert: BackupStale
+        expr: time() - backup_last_success_timestamp > 86400
+        for: 1h
+        labels:
+          severity: warning
+          service: social-pro
+          component: backup
+        annotations:
+          summary: "Backup is stale"
+          description: "Last successful backup was more than 24 hours ago."
+          runbook_url: "https://wiki.social-pro.app/runbooks/backup-stale"
+
+  # Performance Alerts
+  - name: performance
+    rules:
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: social-pro
+          component: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "95th percentile query time is {{ $value }}s for more than 5 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/slow-database-queries"
+
+      - alert: CacheHitRateLow
+        expr: rate(cache_hits_total[5m]) / rate(cache_requests_total[5m]) < 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: social-pro
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} for more than 10 minutes."
+          runbook_url: "https://wiki.social-pro.app/runbooks/low-cache-hit-rate"

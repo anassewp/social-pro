@@ -1,0 +1,116 @@
+/**
+ * TypeScript configuration specifically for testing
+ * Extends the main configuration with test-specific settings
+ */
+
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "es5",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es6",
+      "es2017",
+      "es2018",
+      "esnext",
+      "esnext.asynciterable"
+    ],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "noEmit": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/components/*": ["./src/components/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/tests/*": ["./tests/*"]
+    },
+    "outDir": "./dist",
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "removeComments": true,
+    "importHelpers": true,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.mjs",
+    "**/*.cjs",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    "dist",
+    "build",
+    "coverage",
+    "test-results"
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    },
+    "require": [
+      "tsconfig-paths/register"
+    ],
+    "files": true,
+    "experimentalSpecifierResolution": "node",
+    "esm": false
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.ts"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^@/components/(.*)$": "<rootDir>/src/components/$1",
+      "^@/lib/(.*)$": "<rootDir>/src/lib/$1",
+      "^@/hooks/(.*)$": "<rootDir>/src/hooks/$1",
+      "^@/utils/(.*)$": "<rootDir>/src/utils/$1",
+      "^@/types/(.*)$": "<rootDir>/src/types/$1",
+      "^@/tests/(.*)$": "<rootDir>/tests/$1"
+    },
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "testMatch": [
+      "<rootDir>/tests/**/*.(test|spec).(ts|tsx|js)",
+      "<rootDir>/src/**/__tests__/**/*.(ts|tsx|js)",
+      "<rootDir>/**/*.(test|spec).(ts|tsx|js)"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "!src/**/*.d.ts",
+      "!src/types/**",
+      "!src/**/__tests__/**",
+      "!src/**/index.{js,ts}",
+      "!src/**/*.stories.{ts,tsx}",
+      "!src/**/stories/**",
+      "!src/**/mocks/**",
+      "tests/**/*.{ts,tsx,js}"
+    ]
+  }
+}

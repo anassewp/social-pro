@@ -1,107 +1,223 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
+import { 
+  createSecurityHeadersManager,
+  comprehensiveSecurityManager,
+  inputSanitizer,
+  type SanitizationResult
+} from '@/lib/security'
 
 export async function middleware(request: NextRequest) {
-  // تحديث الجلسة والتحقق من Authentication
-  let response = await updateSession(request)
-  
-  // إضافة Security Headers
-  const headers = new Headers(response.headers)
-  addSecurityHeaders(headers, request)
-  
-  // إذا كان response redirect، نعيد redirect جديد مع headers
-  if (response.status >= 300 && response.status < 400) {
-    const location = response.headers.get('location')
-    if (location) {
-      return NextResponse.redirect(location, { headers })
+  try {
+    // فحص شامل للأمان
+    const securityResults = comprehensiveSecurityManager.performComprehensiveSecurityCheck(request)
+    
+    // إذا كان هناك HTTPS redirect مطلوب
+    if (securityResults.httpsRedirect?.shouldRedirect) {
+      return comprehensiveSecurityManager['httpsRedirect'].createHTTPSRedirect(
+        securityResults.httpsRedirect.redirectUrl!
+      )
     }
+    
+    // إذا لم يكن الطلب مسموح (rate limiting, CORS, etc.)
+    if (!securityResults.isAllowed) {
+      return new NextResponse('Forbidden - Security Policy Violation', {
+        status: 403,
+        headers: {
+          'Content-Type': 'text/plain',
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'DENY'
+        }
+      })
+    }
+    
+    // تحديث الجلسة والتحقق من Authentication
+    let response = await updateSession(request)
+    
+    // تنظيف المدخلات المشبوهة
+    const sanitizedUrl = sanitizeRequestUrl(request.url)
+    if (sanitizedUrl !== request.url) {
+      // إعادة التوجيه للـ URL المنظف
+      const newUrl = new URL(sanitizedUrl)
+      newUrl.search = sanitizeQueryParams(newUrl.searchParams).toString()
+      return NextResponse.redirect(newUrl.toString())
+    }
+    
+    // إضافة Security Headers متقدمة
+    const headers = new Headers(response.headers)
+    const securityHeadersManager = createSecurityHeadersManager(request)
+    securityHeadersManager.applyAllHeaders(headers, request)
+    
+    // إضافة CORS headers إذا كان مطلوب
+    const origin = request.headers.get('origin')
+    if (origin && request.method === 'OPTIONS') {
+      const corsResult = comprehensiveSecurityManager['corsManager'].validateCORS(request, origin)
+      for (const [key, value] of Object.entries(corsResult.corsHeaders)) {
+        headers.set(key, value)
+      }
+    }
+    
+    // إضافة معلومات الأمان للتتبع
+    headers.set('X-Security-Policy', 'comprehensive')
+    headers.set('X-Content-Type-Options', 'nosniff')
+    headers.set('X-Frame-Options', 'DENY')
+    headers.set('X-XSS-Protection', '1; mode=block')
+    
+    // إذا كان response redirect، نعيد redirect جديد مع headers
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get('location')
+      if (location) {
+        return NextResponse.redirect(location, { headers })
+      }
+    }
+    
+    // للـ responses العادية، نعيد response جديد مع headers محدثة
+    return NextResponse.next({
+      request,
+      headers,
+    })
+    
+  } catch (error) {
+    // في حالة خطأ في middleware، نعيد response آمن
+    console.error('Security middleware error:', error)
+    
+    return new NextResponse('Internal Server Error', {
+      status: 500,
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'DENY',
+        'X-XSS-Protection': '1; mode=block'
+      }
+    })
   }
-  
-  // للـ responses العادية، نعيد response جديد مع headers محدثة
-  return NextResponse.next({
-    request,
-    headers,
-  })
 }
 
 /**
- * إضافة Security Headers للـ response
+ * تنظيف URL الطلب للتأكد من عدم وجود threats
  */
-function addSecurityHeaders(headers: Headers, request: NextRequest) {
-  // Prevent clickjacking attacks
-  headers.set('X-Frame-Options', 'DENY')
+function sanitizeRequestUrl(url: string): string {
+  try {
+    const urlObj = new URL(url)
+    
+    // تنظيف pathname
+    urlObj.pathname = sanitizePathSegment(urlObj.pathname)
+    
+    return urlObj.toString()
+  } catch {
+    return url
+  }
+}
+
+/**
+ * تنظيف مسار URL
+ */
+function sanitizePathSegment(path: string): string {
+  const result = inputSanitizer.sanitize(path, {
+    maxLength: 500,
+    blockSuspiciousPatterns: true,
+    removeNullBytes: true
+  })
   
-  // Prevent MIME type sniffing
-  headers.set('X-Content-Type-Options', 'nosniff')
+  return result.sanitizedValue
+}
+
+/**
+ * تنظيف query parameters
+ */
+function sanitizeQueryParams(params: URLSearchParams): URLSearchParams {
+  const sanitizedParams = new URLSearchParams()
   
-  // Enable XSS protection (legacy browsers)
-  headers.set('X-XSS-Protection', '1; mode=block')
+  for (const [key, value] of params.entries()) {
+    const sanitizedKey = inputSanitizer.sanitize(key, {
+      maxLength: 100,
+      blockSuspiciousPatterns: true
+    })
+    
+    const sanitizedValue = inputSanitizer.sanitize(value, {
+      maxLength: 1000,
+      blockSuspiciousPatterns: true
+    })
+    
+    sanitizedParams.set(sanitizedKey.sanitizedValue, sanitizedValue.sanitizedValue)
+  }
   
-  // Referrer Policy - control referrer information
-  headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  
-  // Permissions Policy - restrict browser features
-  headers.set(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), interest-cohort=()'
-  )
-  
-  // Content Security Policy (CSP)
-  const isDevelopment = process.env.NODE_ENV === 'development'
-  
-  // استخراج origin من request لدعم أي IP address
-  const host = request.headers.get('host') || ''
-  const protocol = request.headers.get('x-forwarded-proto') || 
-                   (request.url.startsWith('https') ? 'https' : 'http')
-  const origin = `${protocol}://${host}`
-  
-  // بناء CSP directives - في Development نسمح بالوصول من أي IP
-  // ملاحظة: في Development نسمح بـ unsafe-eval لـ Next.js HMR/Turbopack
-  const cspDirectives = [
-    isDevelopment
-      ? `default-src 'self' ${origin}` // إضافة origin للدعم من أي IP
-      : "default-src 'self'",
-    isDevelopment
-      ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${origin} http://localhost:* http://127.0.0.1:* http://*:* https://*:* 'wasm-unsafe-eval'` // Development: Next.js HMR يحتاج unsafe-eval
-      : "script-src 'self'", // Production: أكثر تقييداً
-    `style-src 'self' 'unsafe-inline' ${origin} https://fonts.googleapis.com`, // للـ Tailwind + Google Fonts + origin
-    "font-src 'self' data: https://fonts.gstatic.com", // Google Fonts
-    `img-src 'self' data: https: blob: ${origin}`, // إضافة origin للصور
-    isDevelopment
-      ? `connect-src 'self' ${origin} ws://${host} wss://${host} http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:* http://*:* ws://*:* wss://*:* https://*.supabase.co wss://*.supabase.co https://fonts.googleapis.com` // Development + WebSocket + Google Fonts
-      : "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://fonts.googleapis.com", // Production + Google Fonts
-    "frame-ancestors 'none'",
-    isDevelopment
-      ? `base-uri 'self' ${origin}` // إضافة origin للـ base URI
-      : "base-uri 'self'",
-    isDevelopment
-      ? `form-action 'self' ${origin}` // إضافة origin للـ form actions
-      : "form-action 'self'",
-    isDevelopment
-      ? "worker-src 'self' blob:" // للـ Web Workers في Development
-      : "worker-src 'self'",
+  return sanitizedParams
+}
+
+/**
+ * تنظيف وتحسين headers الطلب
+ */
+function sanitizeRequestHeaders(request: NextRequest): Headers {
+  const headers = new Headers()
+  const allowedHeaders = [
+    'accept',
+    'accept-language',
+    'content-length',
+    'content-type',
+    'user-agent',
+    'authorization',
+    'x-requested-with',
+    'x-api-key',
+    'origin',
+    'referer'
   ]
   
-  headers.set('Content-Security-Policy', cspDirectives.join('; '))
-  
-  // HSTS - Force HTTPS (في Production فقط)
-  if (process.env.NODE_ENV === 'production') {
-    headers.set(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains; preload'
-    )
+  for (const headerName of allowedHeaders) {
+    const value = request.headers.get(headerName)
+    if (value) {
+      const sanitized = inputSanitizer.sanitize(value, {
+        maxLength: 2000,
+        blockSuspiciousPatterns: true
+      })
+      headers.set(headerName, sanitized.sanitizedValue)
+    }
   }
+  
+  return headers
 }
 
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * تطبيق middleware على جميع الـ requests عدا:
+     * - _next/static (ملفات ثابتة)
+     * - _next/image (تحسين الصور)
+     * - favicon.ico (أيقونة الموقع)
+     * - ملفات الوسائط الثابتة
+     * - ملفات النظام الداخلية
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|_next/manifest\\.json|static|manifest\\.json|favicon\\.ico|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)',
+    
+    /*
+     * تضمين API routes مع فحص أمان إضافي
+     */
+    '/api/(.*)',
+    
+    /*
+     * تضمين صفحات Admin مع فحص شامل
+     */
+    '/admin/(.*)',
+    
+    /*
+     * تضمين auth pages مع فحص عالي
+     */
+    '/auth/(.*)',
+    
+    /*
+     * تضمين dashboard مع فحص session
+     */
+    '/dashboard/(.*)',
+    
+    /*
+     * صفحات المقالات مع فحص content
+     */
+    '/posts/(.*)',
   ],
+  
+  /*
+   * تكوين إضافي للأمان
+   */
+  // تحديد حجم الـ body للـ requests
+  // runtime: 'nodejs', // لضمان عمل جميع features
 }

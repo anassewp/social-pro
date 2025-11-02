@@ -1,0 +1,126 @@
+# Prometheus Configuration for Social Pro
+# Comprehensive monitoring setup
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Alert rules files
+rule_files:
+  # - "alert_rules.yml"
+  # - "recording_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+
+  # Social Pro Application
+  - job_name: 'social-pro-app'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    honor_labels: true
+
+  # Nginx metrics
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/nginx_status'
+    scrape_interval: 30s
+    scrape_timeout: 5s
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Node Exporter - System metrics
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    scrape_timeout: 15s
+
+  # cAdvisor - Container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 15s
+
+  # Elasticsearch metrics
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+    metrics_path: '/_prometheus/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Logstash metrics
+  - job_name: 'logstash'
+    static_configs:
+      - targets: ['logstash:9600']
+    metrics_path: '/_node/stats'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Custom application metrics
+  - job_name: 'app-business-metrics'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/api/metrics/business'
+    scrape_interval: 60s
+    scrape_timeout: 30s
+
+  # External services monitoring
+  - job_name: 'external-services'
+    static_configs:
+      - targets: []
+    scrape_interval: 300s
+    metrics_path: '/health'
+    scrape_timeout: 30s
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Storage configuration
+storage:
+  tsdb:
+    retention.time: 30d
+    retention.size: 10GB
+
+# Feature flags
+feature_flags:
+  - promql-at-modifier
+  - expand-external-labels
+  - memory-snapshot-on-shutdown
+  - extra-scrape-metrics
+  - promql-at-modifier
+  - remote-write-receiver
+  - exemplar-storage
+  - expand-external-labels
+  - memory-snapshot-on-shutdown
+  - extra-scrape-metrics
+  - promql-at-modifier
+  - expand-external-labels
+  - memory-snapshot-on-shutdown
+  - extra-scrape-metrics
+  - promql-at-modifier
+  - expand-external-labels
+  - memory-snapshot-on-shutdown
+  - extra-scrape-metrics
